@@ -143,7 +143,8 @@ export const deleteIdea = async (
             });
         }
 
-        // RBAC check
+
+
         if (user.role !== ROLES.ADMIN && !idea.isOwnedBy(user._id.toString())) {
             throw new APIError({
                 message: 'Forbidden: You cannot delete ideas created by other users',
