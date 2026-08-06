@@ -5,14 +5,16 @@ import routes from './routes.js';
 import { configurePassport } from './passport/index.js';
 import { APIError } from '../errors/APIError.js';
 import { logger } from './winston.js';
+import cookieParser from 'cookie-parser';
 
 export const createExpressApp = (): Express => {
     const app = express();
 
 
-    app.use(cors());
+    app.use(cors({ credentials: true, origin: true }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    app.use(cookieParser());
 
 
     configurePassport();

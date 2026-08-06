@@ -1,8 +1,17 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, CookieOptions } from 'express';
 import { User } from '../models/users/index.js';
 import { APIError } from '../errors/APIError.js';
 import { generateToken } from '../utils/index.js';
 import { IUserDocument } from '../models/users/schema.js';
+import { config } from '../config/environments.js';
+
+
+const getCookieOptions = (): CookieOptions => ({
+    httpOnly: true,
+    secure: config.env === 'production',
+    sameSite: 'lax',
+    maxAge: 24 * 60 * 60 * 1000,
+});
 
 export const register = async (
     req: Request,
@@ -34,6 +43,8 @@ export const register = async (
             role: user.role,
         });
 
+        res.cookie('token', token, getCookieOptions());
+
         res.status(201).json({
             message: 'User registered successfully',
             token,
@@ -58,6 +69,8 @@ export const login = async (
             role: user.role,
         });
 
+        res.cookie('token', token, getCookieOptions());
+
         res.status(200).json({
             message: 'Login successful',
             token,
@@ -66,6 +79,21 @@ export const login = async (
     } catch (error) {
         next(error);
     }
+};
+
+export const logout = async (
+    _req: Request,
+    res: Response
+): Promise<void> => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: config.env === 'production'
+    });
+
+    res.status(200).json({
+        message: 'Logged out successfully'
+    });
 };
 
 export const getProfile = async (

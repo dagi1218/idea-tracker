@@ -5,6 +5,7 @@ import {
     getProfile,
     getAllUsers,
     deleteUser,
+    logout
 } from '../controllers/user.js';
 import { validateRegister, validateLogin } from '../validators/user.validator.js';
 import { authenticateJwt, authenticateLocal, authorizeRoles } from '../controllers/middleware.js';
@@ -15,6 +16,7 @@ const router = Router();
 // Public Authentication
 router.post('/register', validateRegister, register);
 router.post('/login', validateLogin, authenticateLocal, login);
+router.post('/logout', logout);
 
 // Protected User Profile
 router.get('/profile', authenticateJwt, getProfile);
