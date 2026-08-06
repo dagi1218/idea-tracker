@@ -9,6 +9,6 @@ export const registerIdeaMethods = (
     ideaSchema.methods.isOwnedBy = function (
         userId: string | Types.ObjectId
     ): boolean {
-        return this.owner.toString() === userId.toString();
+        return this.owner._id.toString() === userId.toString();
     };
 };
