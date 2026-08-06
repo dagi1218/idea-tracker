@@ -1,0 +1,781 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-5678-90ab-cdef-1234567890ab",
+		"name": "Idea Tracker API",
+		"description": "Comprehensive Postman Collection for testing Idea Tracker REST API, including Happy Path workflows, Role-Based Access Control, and extensive validation edge cases (empty strings, single-character strings, very long strings, invalid IDs, etc.).",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000/api",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "adminToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdIdeaId",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "01. System",
+			"item": [
+				{
+					"name": "GET Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/test",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"test"
+							]
+						},
+						"description": "Checks server status and readiness."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "02. Auth & Users (Happy Path)",
+			"item": [
+				{
+					"name": "POST Register Normal User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jane Doe\",\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123!\",\n  \"role\": \"user\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Registers a normal user."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Register Admin User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPassword123!\",\n  \"role\": \"admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Registers an admin user."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Login Normal User (Saves Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('token', jsonData.token);",
+									"    console.log('User token saved automatically!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"jane@example.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						},
+						"description": "Logs in normal user and automatically saves the JWT token into {{token}} collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "POST Login Admin User (Saves Admin Token)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.token) {",
+									"    pm.collectionVariables.set('adminToken', jsonData.token);",
+									"    console.log('Admin token saved automatically!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"AdminPassword123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"login"
+							]
+						},
+						"description": "Logs in admin user and automatically saves the JWT token into {{adminToken}} collection variable."
+					},
+					"response": []
+				},
+				{
+					"name": "GET User Profile",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						},
+						"description": "Fetches profile of currently authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "GET All Users [Admin Only]",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Retrieves list of all registered users (Admin permission required)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "03. Ideas Management (Happy Path)",
+			"item": [
+				{
+					"name": "POST Create Idea (Saves Idea ID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonData = pm.response.json();",
+									"if (jsonData.idea && jsonData.idea._id) {",
+									"    pm.collectionVariables.set('createdIdeaId', jsonData.idea._id);",
+									"    console.log('Created Idea ID saved: ' + jsonData.idea._id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Build AI Assistant App\",\n  \"description\": \"A smart productivity application for managing creative ideas.\",\n  \"tags\": [\"tech\", \"ai\", \"productivity\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Creates a new idea and saves its _id into {{createdIdeaId}}."
+					},
+					"response": []
+				},
+				{
+					"name": "GET All Ideas",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Retrieves ideas owned by the authenticated user."
+					},
+					"response": []
+				},
+				{
+					"name": "GET Idea by ID",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ideas/{{createdIdeaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas",
+								"{{createdIdeaId}}"
+							]
+						},
+						"description": "Fetches a specific idea by ID."
+					},
+					"response": []
+				},
+				{
+					"name": "PUT Update Idea",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Build Advanced AI Assistant\",\n  \"description\": \"An upgraded productivity tool for managing and rating creative ideas.\",\n  \"tags\": [\"tech\", \"ai\", \"v2\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas/{{createdIdeaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas",
+								"{{createdIdeaId}}"
+							]
+						},
+						"description": "Updates an existing idea."
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE Idea",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ideas/{{createdIdeaId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas",
+								"{{createdIdeaId}}"
+							]
+						},
+						"description": "Deletes the created idea."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "04. Validation & Edge Cases (Negative Tests - Expected 400 / 401 / 403)",
+			"item": [
+				{
+					"name": "1. Register - Empty Strings (Expect 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"\",\n  \"email\": \"\",\n  \"password\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Tests empty string inputs. Expected result: 400 Bad Request with validation errors."
+					},
+					"response": []
+				},
+				{
+					"name": "2. Register - Single-Character Name (Expect 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"A\",\n  \"email\": \"singlechar@example.com\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Tests single-character string ('A') for name which fails min length 3 constraint. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "3. Register - Invalid Email Format (Expect 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Valid Name\",\n  \"email\": \"invalid-email-address\",\n  \"password\": \"Password123!\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Tests invalid email string. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "4. Register - Short Password (Expect 400)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Valid Name\",\n  \"email\": \"validpass@example.com\",\n  \"password\": \"123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/users/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"register"
+							]
+						},
+						"description": "Tests short password under 8 characters. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "5. Create Idea - Empty Strings (Expect 400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"\",\n  \"description\": \"\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Tests empty strings for title and description. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "6. Create Idea - Single-Character Title (Expect 400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"A\",\n  \"description\": \"This is a valid long description for an idea.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Tests single-character string ('A') for title which fails min length 3 constraint. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "7. Create Idea - Very Long Title (>150 Chars) (Expect 400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\",\n  \"description\": \"Valid description for an idea.\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Tests extremely long string (>150 characters) for title which fails max length 150 constraint. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "8. Create Idea - Single-Character Description (Expect 400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Valid Idea Title\",\n  \"description\": \"A\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/ideas",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas"
+							]
+						},
+						"description": "Tests single-character string ('A') for description which fails min length 5 constraint. Expected result: 400 Bad Request."
+					},
+					"response": []
+				},
+				{
+					"name": "9. Idea by ID - Invalid MongoID Format (Expect 400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/ideas/invalid-mongoid-123",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"ideas",
+								"invalid-mongoid-123"
+							]
+						},
+						"description": "Tests malformed MongoID in URL parameter. Expected result: 400 Bad Request ('Invalid Idea ID format')."
+					},
+					"response": []
+				},
+				{
+					"name": "10. Get Profile - Unauthorized (No Token) (Expect 401)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users",
+								"profile"
+							]
+						},
+						"description": "Tests calling protected route without Bearer token. Expected result: 401 Unauthorized."
+					},
+					"response": []
+				},
+				{
+					"name": "11. Get All Users - Forbidden (Normal User Token) (Expect 403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/users",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"users"
+							]
+						},
+						"description": "Tests calling admin-only route with normal user JWT token. Expected result: 403 Forbidden."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
