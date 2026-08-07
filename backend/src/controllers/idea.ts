@@ -67,8 +67,7 @@ export const getIdeaById = async (
             });
         }
 
-
-        if (user.role !== ROLES.ADMIN && !idea.isOwnedBy(user._id.toString())) {
+        if (user.role !== ROLES.ADMIN && !idea.isOwnedBy(user._id)) {
             throw new APIError({
                 message: 'Forbidden: You do not have access to this idea',
                 status: 403,

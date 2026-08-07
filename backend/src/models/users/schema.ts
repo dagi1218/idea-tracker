@@ -11,6 +11,7 @@ export interface IUser {
     isEmailVerified: boolean;
     googleId?: string;
     facebookId?: string;
+    refreshToken?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -72,6 +73,10 @@ export const userSchema = new Schema<IUserDocument, IUserModel>(
         facebookId: {
             type: String,
             sparse: true,
+        },
+        refreshToken: {
+            type: String,
+            default: null,
         },
     },
     {

@@ -8,6 +8,8 @@ interface EnvironmentVariables {
     NODE_ENV: 'development' | 'production' | 'test';
     MONGO_URI: string;
     JWT_SECRET: string;
+    REFRESH_SECRET: string;
+    REFRESH_EXPIRES_IN: string;
     JWT_EXPIRES_IN: string;
     GOOGLE_CLIENT_ID?: string;
     GOOGLE_CLIENT_SECRET?: string;
@@ -31,6 +33,10 @@ const envSchema = Joi.object<EnvironmentVariables>({
         .required()
         .description('Secret key for signing JSON Web Tokens'),
     JWT_EXPIRES_IN: Joi.string().default('1d'),
+    REFRESH_SECRET: Joi.string()
+        .required()
+        .description('Secret key for signing JSON Web Tokens'),
+    REFRESH_EXPIRES_IN: Joi.string().default('7d'),
     GOOGLE_CLIENT_ID: Joi.string().allow(''),
     GOOGLE_CLIENT_SECRET: Joi.string().allow(''),
     FACEBOOK_APP_ID: Joi.string().allow(''),
@@ -54,6 +60,10 @@ export const config = {
     jwt: {
         secret: envVars.JWT_SECRET,
         expiresIn: envVars.JWT_EXPIRES_IN,
+    },
+    refresh: {
+        secret: envVars.REFRESH_SECRET,
+        expiresIn: envVars.REFRESH_EXPIRES_IN,
     },
     oauth: {
         google: {

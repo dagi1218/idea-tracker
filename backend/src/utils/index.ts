@@ -14,3 +14,13 @@ export const generateToken = (payload: TokenPayload): string => {
     expiresIn: config.jwt.expiresIn as jwt.SignOptions['expiresIn'],
   });
 };
+
+
+export const refreshToken = (payload: TokenPayload): string => {
+  return jwt.sign(payload, config.refresh.secret, { expiresIn: config.refresh.expiresIn as jwt.SignOptions['expiresIn'] });
+}
+
+
+export const verifyToken = (token: string): TokenPayload => {
+  return jwt.verify(token, config.jwt.secret) as TokenPayload
+}

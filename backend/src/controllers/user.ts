@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction, CookieOptions } from 'express';
 import { User } from '../models/users/index.js';
 import { APIError } from '../errors/APIError.js';
-import { generateToken } from '../utils/index.js';
+import { generateToken, refreshToken, verifyToken } from '../utils/index.js';
 import { IUserDocument } from '../models/users/schema.js';
 import { config } from '../config/environments.js';
 
 
-const getCookieOptions = (): CookieOptions => ({
+const getRefreshCookieOptions = (): CookieOptions => ({
     httpOnly: true,
     secure: config.env === 'production',
     sameSite: 'lax',
+    path: '/api/users/refresh',
     maxAge: 24 * 60 * 60 * 1000,
 });
 
@@ -43,7 +44,18 @@ export const register = async (
             role: user.role,
         });
 
-        res.cookie('token', token, getCookieOptions());
+        const refresh = refreshToken({
+            id: user._id.toString(),
+            email: user.email,
+            role: user.role,
+        });
+        user.refreshToken = refresh;
+        await user.save();
+
+
+        res.cookie('refresh', refresh, getRefreshCookieOptions());
+
+
 
         res.status(201).json({
             message: 'User registered successfully',
@@ -68,8 +80,15 @@ export const login = async (
             email: user.email,
             role: user.role,
         });
+        const refresh = refreshToken({
+            id: user._id.toString(),
+            email: user.email,
+            role: user.role,
+        })
 
-        res.cookie('token', token, getCookieOptions());
+        user.refreshToken = refresh;
+        await user.save();
+        res.cookie('refresh', refresh, getRefreshCookieOptions());
 
         res.status(200).json({
             message: 'Login successful',
@@ -95,6 +114,8 @@ export const logout = async (
         message: 'Logged out successfully'
     });
 };
+
+
 
 export const getProfile = async (
     req: Request,
@@ -133,6 +154,51 @@ export const deleteUser = async (
             });
         }
         res.status(200).json({ message: 'User deleted successfully' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+export const refreshAccessToken = async (
+    req: Request,
+    res: Response,
+    next: NextFunction
+): Promise<void> => {
+    try {
+        const token = req.cookies?.refresh || req.body.refresh;
+        if (!token) {
+            throw new APIError({ message: 'Refresh Token required', status: 401, isPublic: true });
+        }
+
+        const decoded = verifyToken(token);
+
+        const user = await User.findById(decoded.id);
+        if (!user || user.refreshToken !== token) {
+            throw new APIError({ message: 'Invalid or revoked Refresh Token', status: 403, isPublic: true });
+        }
+
+        const newAccessToken = generateToken({
+            id: user._id.toString(),
+            email: user.email,
+            role: user.role,
+        });
+
+        const newRefreshToken = refreshToken({
+            id: user._id.toString(),
+            email: user.email,
+            role: user.role,
+        });
+
+        user.refreshToken = newRefreshToken;
+        await user.save();
+
+        res.cookie('refreshToken', newRefreshToken, getRefreshCookieOptions());
+
+        res.status(200).json({
+            accessToken: newAccessToken,
+        });
     } catch (error) {
         next(error);
     }
