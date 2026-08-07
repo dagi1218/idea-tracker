@@ -194,7 +194,7 @@ export const refreshAccessToken = async (
         user.refreshToken = newRefreshToken;
         await user.save();
 
-        res.cookie('refreshToken', newRefreshToken, getRefreshCookieOptions());
+        res.cookie('refresh', newRefreshToken, getRefreshCookieOptions());
 
         res.status(200).json({
             accessToken: newAccessToken,
